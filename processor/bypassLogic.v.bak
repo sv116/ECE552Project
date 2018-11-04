@@ -1,0 +1,18 @@
+module bypassLogic(regWrite, MemRead, DX_rs, DX_rt, XM_rd, MW_rd, ALUinA, ALUinB, muxM);
+
+input regWrite, MemRead;
+input [4:0] DX_rs, DX_rt, XM_rd, MW_rd;
+output  ALUinA, ALUinB, muxM;
+
+//data hazards
+wire mem1, mem2, ex1, ex2, hazard1, hazard2;;
+or or1(hazard1, MW_rd==DX_rs, MW_rd == DX_rt);
+or or2(hazard2, XM_rd==DX_rs, XM_rd == DX_rt);
+and and1(mem1, regWrite, MW_rd != 5'b0, hazard1 ); // regWrite is by wm
+and and2(mem2, regWrite, XM_rd != 5'b0, hazard2);
+
+and and3(ex1, regWrite, MW_rd != 5'b0, MW_rd==DX_rs);
+
+
+
+endmodule

@@ -1,0 +1,13 @@
+module instruction_splitter(instruction, opcode, rd, rs, rt, immediate);
+
+input [31:0] instruction;
+output [4:0] opcode, rd, rs, rt;
+output [15:0] immediate;
+
+assign opcode = instruction[31:27];
+assign rd = instruction[26:22];
+assign rs = instruction[21:17];
+assign rt = instruction[16:12];
+assign immediate = instruction[16:0];
+
+endmodule
