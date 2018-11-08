@@ -9,11 +9,11 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset, data_resultRDY, data_exception );
+module skeleton(clock, reset);
     input clock, reset;
 	 
 	  
-	 output data_resultRDY, data_exception;
+	 //output data_resultRDY, data_exception;
 
     /** IMEM **/
     // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
@@ -84,7 +84,7 @@ module skeleton(clock, reset, data_resultRDY, data_exception );
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
         data_readRegB,                   // I: Data from port B of regfile
-		  data_resultRDY, data_exception
+		  
 		  
     );
 
