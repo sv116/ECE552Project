@@ -1,9 +1,0 @@
-module controller(in0, in1, in2, in3, in4, in5, in6, in7, in8, in21, in22, regWrite, ALUSrc, 
-                  PCSrc,RegDst, ALUop, MemRead, MemWrite,MemToReg);
-						
-//think about what other signals you may need
-//passed down in the latch?
-						
-						
-						
-endmodule						
