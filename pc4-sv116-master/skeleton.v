@@ -9,22 +9,17 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cycles,
-	 outputFD,
-	 output_DX,
-	 output_XM,
-	 output_MW,
-	 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,  branchTaken, branchA, branchB, muxBranchA, muxBranchB, lessThan1 );
+module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, data, wren, cycles, inst,
+	   branchTaken, branchA, branchB, muxBranchA, muxBranchB, lessThan1);
     input clock, reset;
-	 
-	  
-	 output [31:0] cycles,  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
-	 output [63:0] outputFD;
-	 output [151:0] output_DX;
-	 output [78:0] output_XM;
-	 output [76:0] output_MW;
-	 output ALUSrc,  branchTaken, lessThan1;
-    output [4:0] ALUop;
+//	 
+//	 output [63:0] outputFD;
+//	 output [151:0] output_DX;
+//	 output [78:0] output_XM;
+//	 output [76:0] output_MW;
+	 output [31:0] cycles, inst, branchA, branchB;
+	 output  branchTaken, lessThan1;
+   // output [4:0] ALUop;
 	 output [1:0] muxBranchA, muxBranchB;
     /** IMEM **/
     // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
@@ -41,8 +36,8 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
     // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
     // Make sure you configure it correctly!
     wire [11:0] address_dmem;
-    wire [31:0] data;
-    wire wren;
+    output [31:0] data;
+    output wren;
     wire [31:0] q_dmem;
     dmem my_dmem(
         .address    (address_dmem),       // address of data
@@ -96,13 +91,9 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
         data_readRegA,                  // I: Data from port A of regfile
         data_readRegB,                   // I: Data from port B of regfile
 		  
-		  cycles,
-		 outputFD,
-		 output_DX,
-		 output_XM,
-		 output_MW,
-		 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,
+		  cycles, inst,
 		 branchTaken, branchA, branchB,muxBranchA, muxBranchB, lessThan1
+		 
     );
 
  

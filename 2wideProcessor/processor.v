@@ -71,7 +71,13 @@ module processor(
     data_readRegA,                  // I: Data from port A of regfile
     data_readRegB,                   // I: Data from port B of regfile
 	 	
-	 cycles, inst,
+	 cycles,
+	 outputFD,
+	 output_DX,
+	 output_XM,
+	 output_MW,
+	 ALUSrc,
+	 data_result, ALU_dataA, ALU_dataB, ALUop,
 	 branchTaken, branchA, branchB,
 	 muxBranchA, muxBranchB, less
      
@@ -81,23 +87,13 @@ module processor(
 	
 	
 	reg [31:0] cycle_count = 31'b0;
-	reg [31:0] inst_count  = 31'b0;
 	always @(posedge clock)
 	  begin
 			  cycle_count <= cycle_count+1;
-			  inst_count  <= inst_count +1;
-			  if(FD_flush)
-			  begin
-					inst_count  <= inst_count-2;
-			  end
-			  if(!PCWrite)
-			  begin
-					inst_count  <= inst_count-1;
-			  end
 	  end
 		
 		output [31:0] cycles = cycle_count;
-		output [31:0] inst = inst_count;
+		
     // Control signals
     input clock, reset;
 
@@ -119,11 +115,11 @@ module processor(
 
 	 //testing outputs
 	 wire [31:0] thisPC;
-	 wire [63:0] outputFD;
-	 wire [151:0] output_DX;
-	 wire [78:0] output_XM;
-	 wire [76:0] output_MW;
-	 wire ALUSrc;
+	 output [63:0] outputFD;
+	 output [151:0] output_DX;
+	 output [78:0] output_XM;
+	 output [76:0] output_MW;
+	 output ALUSrc;
 	 //ctrl_pcTarget
     /* YOUR CODE STARTS HERE */
 	 
@@ -213,8 +209,7 @@ module processor(
 	 wire [4:0] readA = bex ? 5'd30 : rs;
 	 assign ctrl_readRegA = readA;
 	 wire BorJR;
-	 //or orBBB(BorJR, branch, JR);
-	 assign BorJR = branch || JR;
+	 or orBBB(BorJR, branch, JR);
     assign ctrl_readRegB =  BorJR ? rd : rt;                  
     wire [31:0] dataA;
 	 wire [31:0] dataB;
@@ -231,7 +226,6 @@ module processor(
 	  output [1:0] muxBranchA, muxBranchB;
 	  wire [1:0] notBranchA, notBranchB;
 	  wire enC0, enC1, enC2, enC3, enC4, enC5;
-	  
 	  not notBcA1(notBranchA[0], muxBranchA[0]);
 	  not notBcA2(notBranchA[1], muxBranchA[1]);
 	  
@@ -263,18 +257,7 @@ module processor(
     
 	 and andbne(bnetaken, i2, notEqual1);
 	 and andblt(blttaken, i6, less);
-	 wire bTaken;
-	 reg b1;
-	 reg b2; 
-//	 always @(negedge clock)
-//	  begin
-//	    b1 <= i2 && notEqual1;
-//		 b2 <= i6 && less;
-//		 bTaken <= b1 || b2;	 
-//	  end
-//	  assign branchTaken = bTaken;
 	 or orbranch(branchTaken, bnetaken, blttaken);
-	// and andTakenB(branchTaken, cycle>31'd10, bTaken);
 	 //addapt pcSrc and flushing
 	 
 	//jump taken? bex
@@ -388,8 +371,8 @@ module processor(
 	     
 	  //instantiate ALU, pass in the opcode, have a mux that chooses btw the aluop and zero, select is addi
 	  wire [31:0] ALU_dataB1;
-	  wire [31:0] data_result, ALU_dataA, ALU_dataB;
-	  wire [4:0] ALUop;
+	  output [31:0] data_result, ALU_dataA, ALU_dataB;
+	  output [4:0] ALUop;
 	  wire isNotEqual, isLessThan, overflow, en0, en1, en2, enB0, enB1, enB2;
 	  wire [1:0] notALUinA1, notALUinB1;
 	  //choose second input, either imm for addi or dataB from reg file
@@ -471,8 +454,10 @@ module processor(
 		assign input_XM[31:0] = latch_result; //ALU result
 		
 		XM_latch XM(clock, XMWrite, reset, output_XM, input_XM);
+		
+/**********************************************************************************************
+*******************/// memory stage/////*****************************************************/
 
-	 // memory stage
 	   wire [31:0] dmem_data;
 	  //calculation of PCSrc
 	  // and andBranch(PCSrc, output_XM[0],output_XM[106]); //this will need to be extended to include jumps
