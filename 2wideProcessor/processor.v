@@ -110,20 +110,39 @@ module processor(
     input clock, reset;
 
     // Imem
-    output [11:0] address_imem;
-    input [31:0] q_imem;
+	 output [11:0] address_imem_a;
+	 output [11:0] address_imem_b;
+	 input [31:0] q_imem_a;			
+    input [31:0] q_imem_b;       
+	 output rden_a;           
+    output rden_b;	          
 
     // Dmem
-    output [11:0] address_dmem;
-    output [31:0] data;
-    output wren;
-    input [31:0] q_dmem;
-
+	 output [11:0] address_imem_a;	 
+	 output [11:0] address_imem_b;   
+    output [31:0] data_a;           
+	 output [31:0] data_b;				 
+    output wren_a;          
+	 output wren_b;          
+    input [31:0] q_dmem_a;     
+	 input [31:0] q_dmem_b; 
+	 
     // Regfile
-    output ctrl_writeEnable;
-    output [4:0] ctrl_writeReg, ctrl_readRegA, ctrl_readRegB;
-    output [31:0] data_writeReg;
-    input [31:0] data_readRegA, data_readRegB;
+	 
+	 output ctrl_writeEnable_a;
+	 output ctrl_writeEnable_b;
+    output [4:0] ctrl_writeReg_a;
+	 output [4:0] ctrl_writeReg_b;
+    output [4:0] ctrl_readRegAa;
+    output [4:0] ctrl_readRegBa;
+	 output [4:0] ctrl_readRegAb;
+	 output [4:0] ctrl_readRegBb;
+    output [31:0] data_writeReg_a;
+	 output [31:0] data_writeReg_b;
+    input [31:0] data_readRegAa;
+    input [31:0] data_readRegBa;
+	 input [31:0] data_readRegAb;
+    input [31:0] data_readRegBb;
 
 	 //testing outputs
 	 wire [31:0] thisPC;
