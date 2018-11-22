@@ -27,9 +27,7 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
     output [4:0] ALUop;
 	 output [1:0] muxBranchA, muxBranchB;
     /** IMEM **/
-    // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
-    // Make sure you configure it correctly!
-	 
+   
     wire [11:0] address_imem_a;
 	 wire [11:0] address_imem_b;
     wire [31:0] q_imem_a;
@@ -47,8 +45,6 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
     );
 
     /** DMEM **/
-    // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
-    // Make sure you configure it correctly!
 	 
     wire [11:0] address_dmem_a;
 	 wire [11:0] address_dmem_b;
@@ -72,25 +68,34 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
     );
 
     /** REGFILE **/
-    // Instantiate your regfile
-    output ctrl_writeEnable;
-    output [4:0] ctrl_writeReg;
-	 wire [4:0] ctrl_readRegA, ctrl_readRegB;
-    output [31:0] data_writeReg;
-    wire [31:0] data_readRegA, data_readRegB;
-    regfile my_regfile(
-        clock,
-        ctrl_writeEnable,
-        reset,
-        ctrl_writeReg,
-        ctrl_readRegA,
-        ctrl_readRegB,
-        data_writeReg,
-        data_readRegA,
-        data_readRegB
+
+    output ctrl_writeEnable_a, ctrl_writeEnable_b;
+    output [4:0] ctrl_writeReg_a, ctrl_writeReg_b;
+	 wire [4:0] ctrl_readRegAa, ctrl_readRegBa, ctrl_readRegAb, ctrl_readRegBb;
+    output [31:0] data_writeReg_a, data_writeReg_b;
+    wire [31:0] data_readRegAa, data_readRegBa, data_readRegAb, data_readRegBb;
+    
+	 regfile my_regfile(
+			 clock,
+			 ctrl_writeEnable_a,
+			 ctrl_writeEnable_b,
+			 ctrl_reset,
+			 ctrl_writeReg_a,
+			 ctrl_writeReg_b,
+			 ctrl_readRegAa,
+			 ctrl_readRegBa,
+			 ctrl_readRegAb,
+			 ctrl_readRegBb,
+			 data_writeReg_a,
+			 data_writeReg_b,
+			 data_readRegAa,
+			 data_readRegBa,
+			 data_readRegAb,
+			 data_readRegBb
     );
 
     /** PROCESSOR **/
+	 
     processor my_processor(
         // Control signals
         clock,                          // I: The master clock
@@ -115,13 +120,20 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
 		  q_dmem_b,
 
         // Regfile
-        ctrl_writeEnable,               // O: Write enable for regfile
-        ctrl_writeReg,                  // O: Register to write to in regfile
-        ctrl_readRegA,                  // O: Register to read from port A of regfile
-        ctrl_readRegB,                  // O: Register to read from port B of regfile
-        data_writeReg,                  // O: Data to write to for regfile
-        data_readRegA,                  // I: Data from port A of regfile
-        data_readRegB,                   // I: Data from port B of regfile
+       ctrl_writeEnable_a,             // O: Write enable for regfile a
+		 ctrl_writeEnable_b,             // O: Write enable for regfile b
+		 ctrl_writeReg_a,                // O: Register to write to in regfile a
+		 ctrl_writeReg_b,						// O: Register to write to in regfile b
+		 ctrl_readRegAa,                 // O: Register to read from port A of regfile for a
+		 ctrl_readRegBa,                 // O: Register to read from port B of regfile for a
+		 ctrl_readRegAb,						// O: Register to read from port A of regfile for a
+		 ctrl_readRegBb,						// O: Register to read from port B of regfile for a
+		 data_writeReg_a,                // O: Data to write to for regfile a
+		 data_writeReg_b,                // O: Data to write to for regfile b
+		 data_readRegAa,                 // I: Data from port A of regfile a
+		 data_readRegBa,                 // I: Data from port B of regfile a
+		 data_readRegAb,                 // I: Data from port A of regfile b
+		 data_readRegBb,                 // I: Data from port B of regfile b
 		  
 		  cycles,
 		 outputFD,

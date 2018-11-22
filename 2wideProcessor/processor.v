@@ -53,23 +53,38 @@ module processor(
     reset,                          // I: A reset signal
 
     // Imem
-    address_imem,                   // O: The address of the data to get from imem
-    q_imem,                         // I: The data from imem
+    address_imem_a,	 // O: The address of the data to get from imem a
+	 address_imem_b,   // O: The address of the data to get from imem b
+	 q_imem_a,			 // I: The data from imem
+    q_imem_b,         // I: The data from imem
+	 rden_a,           // O: read enable for a  might need this, might not we shall see
+    rden_b,	          // O: read enable for b
 
     // Dmem
-    address_dmem,                   // O: The address of the data to get or put from/to dmem
-    data,                           // O: The data to write to dmem
-    wren,                           // O: Write enable for dmem
-    q_dmem,                         // I: The data from dmem
-
+    address_imem_a,	 // O:  The address of the data to get or put from/to dmem a
+	 address_imem_b,   // O:  The address of the data to get or put from/to dmem b
+    data_a,           // O: The data to write to dmem a
+	 data_b,				 // O: The data to write to dmem b
+    wren_a,           // O: Write enable for dmem a
+	 wren_b,           // O: Write enable for dmem b
+    q_dmem_a,          // I: The data from dmem
+	 q_dmem_b,          // I: The data from dmem
+  
     // Regfile
-    ctrl_writeEnable,               // O: Write enable for regfile
-    ctrl_writeReg,                  // O: Register to write to in regfile
-    ctrl_readRegA,                  // O: Register to read from port A of regfile
-    ctrl_readRegB,                  // O: Register to read from port B of regfile
-    data_writeReg,                  // O: Data to write to for regfile
-    data_readRegA,                  // I: Data from port A of regfile
-    data_readRegB,                   // I: Data from port B of regfile
+    ctrl_writeEnable_a,             // O: Write enable for regfile a
+	 ctrl_writeEnable_b,             // O: Write enable for regfile b
+    ctrl_writeReg_a,                // O: Register to write to in regfile a
+	 ctrl_writeReg_b,						// O: Register to write to in regfile b
+    ctrl_readRegAa,                 // O: Register to read from port A of regfile for a
+    ctrl_readRegBa,                 // O: Register to read from port B of regfile for a
+	 ctrl_readRegAb,						// O: Register to read from port A of regfile for a
+	 ctrl_readRegBb,						// O: Register to read from port B of regfile for a
+    data_writeReg_a,                // O: Data to write to for regfile a
+	 data_writeReg_b,                // O: Data to write to for regfile b
+    data_readRegAa,                 // I: Data from port A of regfile a
+    data_readRegBa,                 // I: Data from port B of regfile a
+	 data_readRegAb,                 // I: Data from port A of regfile b
+    data_readRegBb,                 // I: Data from port B of regfile b
 	 	
 	 cycles,
 	 outputFD,
@@ -82,17 +97,14 @@ module processor(
 	 muxBranchA, muxBranchB, less
      
 );  
-	//Cycle counter logic
+	//Cycle and instruction counter logic -- needs to be updated for two wide
 	reg [31:0] cycl; 
-	
-	
 	reg [31:0] cycle_count = 31'b0;
 	always @(posedge clock)
 	  begin
 			  cycle_count <= cycle_count+1;
 	  end
-		
-		output [31:0] cycles = cycle_count;
+	output [31:0] cycles = cycle_count;
 		
     // Control signals
     input clock, reset;
