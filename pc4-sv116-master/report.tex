@@ -1,0 +1,59 @@
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ right=20mm,
+ top=20mm,
+ }
+
+\title{ECE 350: Digital Systems Project Checkpoint 4}
+\author{Stefani Vukajlovic}
+\date{October 30, 2018} % Change this to the date you are submitting
+\maketitle
+
+\begin{document}
+
+\maketitle
+
+\section*{Construction}
+
+\textbf{The high-level architecture of your processor?}\\
+\\
+ The processor is one-wide, five stage pipelined MIPS based processor. Memory is not hierarchical with separate instruction memory and data memory and a register file. The functional units in the processor are an ALU and multdiv units, where the multiplication \& division take 32 cycles with other computations taking one cycle. The processor implements full bypassing, stall and flush logic to achieve better performance. It also handles all hazards. For branches, the processor always assumes that the branch is not taken and flushes the pipeline if the prediction is false. \\
+ \\
+\textbf{How are instructions interpreted and propagated as control signals?}\\
+\\
+Based on the project checkpoint handout the instructions were decoded into series of controls that guide the execution of the following stages in the pipeline. For example, the instructions were first interpreted in terms of opcodes, source and destination registers, target values, ALU opcode etc. Based on these the other cotrols such as MemoryRead, MemWrite, regWrite and similar were set and used to control when and how the instructions are executed. Control signals are being saved in the latches. After the decode stage is done all the controls are saved into the DX latch, some are used in execute stage some are propagated to the XM latch, etc. \\
+\\
+\textbf{ Is your processor logically robust, i.e. if we checked every $2^88$ possible starting states of your processor and ran each for infinite time, would your processor produce the
+correct results?}\\
+\\
+The processor is functional. It should return correct results.There are certain problems that are still left unresolved. Jr instruction is not fully functional and multdiv has not been completely integrated, as it still needs better logic for determination when the stalling should end, current design stalls until the data is ready however it seems that sometimes the data is never ready and this is the issue that needs to be addressed in the future improvement.\\
+\\
+\textbf{ How does it avoid hazards?}\\
+\\
+The latches enabled the execution of multiple instructions per cycle, but also introduced the hazards, which are handled in the bypassLogic, hazardLogic and flushLogic.  Bypass logic determines the select bits for the muxes in the pipeline, more precisely select bits are decoded and used as enable bit in the tri-state buffers as these have shown to have better performance, while hazard logic checks if there are any hazards that result in a stall. Flush logic makes sure that when branches are taken the instructions that were fetched before the branch resolved are flushed out of the pipeline. This is achieved by either setting the instruction read to the nop or by asserting all control signal as zero. The design implements both depending on the situation. The flush logic is also used for jump instructions.\\
+
+\section*{Implementation}
+\textbf{How long does it take to compute results from your processor?}\\
+\\
+Since the processor it a five stage pipeline it takes at least 5 cycles for an instruction to leave a pipeline. Multiple factors can affect the latency of an instruction, such as data or control hazards or the type of the operation. Multiplying and diving take 33 cycles to produce the result in case of no exceptions, which significantly affects the performance. While the better performance could be achieved with modified Booth algorithm that takes 16 cycles, there is nothing else we could do to speed up the execution of multiplying and dividing operations. On the other hand hazards could be eliminated with proper logic explained below.\\
+\\
+\textbf{When does your processor stall and what bypassing logic did you implement to avoid stalling?}\\
+\\
+The processor implements branch and jump calculation in the decode stage to optimize performance, since those are simple enough instructions that do not necessarily require the alu functional unit. As a result, it is possible that data hazard will occur with ALU instruction immediately preceding the branch and the processor will have to stall. The worst case stall is one cycle if the immediately preceding instruction is not a load, if it as load then the processor will have to stall for two cycles. The stall is a result of decode stage happening before the execute stage of the preceding instruction. Bypass logic allows ALU inputs to come from the latch deeper in the pipeline, as opposed to acquiring it from the register file. This reduces the number of overall stalls for a significant amount and thus increases IPC significantly. This processor implements bypassing from the beginning of the writeback and memory stage to the inputs of the ALU as well as from the from the writeback to the memory. \\
+\\
+\textbf{How do you use heuristics to optimize your efficiency?
+How much hardware does your processor use?}\\
+\\
+Having branch and jump calculation in the decode stage required additional hardware however it trades off with significantly better performance as only one instruction is being flushed, the one currently in the fetch. The bypass and hazard detection logic introduces more hardware complexity however as explained earlier results in significant performance improvement. Furthermore, the utilization of hierarchical carry look ahead adder required additional hardware complexity, but insured that the calculations are fast enough and since adder is one of the most used units (the only functional unit) it definitely affects significantly performance and is worth hardware investment. \\ 
+\\
+
+\section*{Integration}
+Timing is an important part of the processor, it ensures the correctness of the results. To ensure the correctness of the processor latches were clocked on the positive edge wile the memory elements and register file were clocked on the negative edge. This ensures that the data is ready when it needs to be, for example if the data is written on the positive edge to the latch then we cannot expect that the correct data would be read form the memory or regFile if use that data as inputs on the positive clocked edge. Half a cycle of delay allows the data to travel thorugh the wires. In addition, as a result of these timing specifications certain control signals had to be delayed by a half a cycle or accelerated to ensure the correctness of  the design. This was done mostly by using dflipflop and triggering them on different clock edges depending where the was data needed. Counter register is computed such that on positive clock edge the nextPC is written into the PC register and nextPC counter is written into the FD latch. The next PC is chosen between several options, jump targets, branch targets or $PC+1$ 
+
+
+\end{document}

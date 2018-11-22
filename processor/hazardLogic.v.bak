@@ -1,7 +1,0 @@
-module hazardLogic(DX_MemReadFDWrite, PCWrite);
-
-output PCWrite, FDWrite;
-
-
-
-endmodule
