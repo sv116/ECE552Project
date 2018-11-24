@@ -3,8 +3,8 @@ module DX_latch(clock,
                 ctrl_reset, data_out, data_in);
 		
  input clock, ctrl_writeEnable, ctrl_reset;		
- input [151:0] data_in;
-  output [151:0] data_out;
+ input [271:0] data_in;
+  output [271:0] data_out;
  //data in components
  /* 
      nextPC 32
@@ -23,7 +23,7 @@ module DX_latch(clock,
  
  generate
  
- for(c=0; c<=151; c=c+1) begin: loop1
+ for(c=0; c<=271; c=c+1) begin: loop1
  dffe_ref f(data_out[c], data_in[c], clock, ctrl_writeEnable, ctrl_reset);
  end
  
