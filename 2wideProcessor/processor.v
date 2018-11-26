@@ -148,8 +148,8 @@ module processor(
 	 wire [31:0] thisPC;
 	 output [95:0] outputFD;
 	 output [271:0] output_DX;
-	 output [78:0] output_XM;
-	 output [76:0] output_MW;
+	 output [157:0] output_XM;
+	 output [153:0] output_MW;
 	 output ALUSrc;
 	 //ctrl_pcTarget
 	 
@@ -554,8 +554,12 @@ module processor(
 	 
 	  DX_latch DX(clock, DXWrite, reset, output_DX, input_DX);
 	 
-	 //execute stage 
-    
+	 
+	 /////////////////////////////////////////////////////////////////////////////////////////////////////
+   /********************************** EXECUTE  Stage **************************************************/
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	
 	  //instantiate ALU, pass in the opcode, have a mux that chooses btw the aluop and zero, select is addi
 	  wire [31:0] ALU_dataB1;
 	  output [31:0] data_result, ALU_dataA, ALU_dataB;
@@ -598,11 +602,12 @@ module processor(
 		  //later add mult div to your ALU
 	     //include exception rstatus
 	  wire dataRDY;  
-	  wire [4:0] destRD = o ? 5'd30 : output_DX[41:37];
+	  wire [4:0] destRD = overflow ? 5'd30 : output_DX[41:37];
 	  dffe_ref dfff(data_resultRDY, dataRDY, ~clock, 1'b1, reset);
 	  wire isAddi, notAddi, isAdd, isSub;
 	  not notAdi(notAddi, isAddi);
 	  wire zeroOp = (ALUop==5'b0);
+	  
 	  and alucheck(isAddi, output_DX[151], zeroOp);  
 	  and aluCheck1(isAdd, zeroOp, notAddi);
 	  assign isSub = (ALUop==5'b1);
@@ -613,38 +618,93 @@ module processor(
 		tristate_buffer tovf1(32'd2, isAddi, result);
 		tristate_buffer tovf2(32'd3, isSub, result);
 		
-	 assign latch_result = o ? result : data_result;
+	 assign latch_result = overflow ? result : data_result;
 	  /////////////////////////////////////////////////
-	  ////Line///////////
+	  ////////////// *** Line  2 *** /////////////////
+	 ////////////////////////////////////////////////
+	  
+	  //instantiate ALU, pass in the opcode, have a mux that chooses btw the aluop and zero, select is addi
+	  wire [31:0] ALU_data2B1;
+	  wire [31:0] data_result2, ALU_dataA2, ALU_dataB2;
+	  wire [4:0] ALUop2;
+	  wire isNotEqual2, isLessThan2, overflow2, en20, en21, en22, en2B0, en2B1, en2B2;
+	  wire [1:0] notALUin2A1, notALUin2B1;
 	  
 	  
 	  
+	  //choose second input, either imm for addi or dataB from reg file
+	  assign ALU_dataB2 = output_DX[258] ? output_DX[183:152] : output_DX[225:194]; 
+	  
+	  //bypass tristate buffers
+//	  not notalB1(notALUinB1[0], ALUinB[0]);
+//	  not notalB2(notALUinB1[1], ALUinB[1]);
+//	  and andalB1(enB0, notALUinB1[1], notALUinB1[0]);
+//	  and andalB2(enB1, notALUinB1[1],     ALUinB[0]);
+//	  and andalB3(enB2,     ALUinB[1], notALUinB1[0]);
+//	  
+//	  tristate_buffer tbB1(ALU_dataB1,     enB0, ALU_dataB);
+//	  tristate_buffer tbB2(data_writeReg_a,  enB1, ALU_dataB);
+//	  tristate_buffer tbB3(output_XM[31:0],enB2, ALU_dataB);
 	  
 	  
+	  //either zeros for addi or regular aluopcode
+	  assign ALUop2 = output_DX[263] ? 5'b0 : output_DX[158:154]; 
 	  
+	  //choose first inout, currently taking only from reg file, later add bypass options like example commented out
+	  assign ALU_dataA2 = output_DX[257:226];
+//	  
+//	  not notalA1(notALUinA1[0], ALUinA[0]);
+//	  not notalA2(notALUinA1[1], ALUinA[1]);
+//	  and andalA1(en0, notALUinA1[1], notALUinA1[0]);
+//	  and andalA2(en1, notALUinA1[1],     ALUinA[0]);
+//	  and andalA3(en2,     ALUinA[1], notALUinA1[0]);
+//	  
+//	  tristate_buffer tb1(output_DX[105:74], en0, ALU_dataA);
+//	  tristate_buffer tb2(data_writeReg_a,     en1, ALU_dataA);
+//	  tristate_buffer tb3(output_XM[31:0],   en2, ALU_dataA);
 	  
+	  wire data_resultRDY2, data_exception2;
 	  
+	  alu ALU2(clock, ALU_dataA2, ALU_dataB2, ALUop2, output_DX[163:159], data_result2, isNotEqual2, isLessThan2, overflow2, dataRDY2, data_exception2);
+		  //mult div not really functional and data_resultRDY and data_exceptions are signals from mult div so not as importatnt
+	     //include exception rstatus
+	  wire dataRDY2; 
 	  
+	  wire [4:0] destRD2 = overflow2 ? 5'd30 : output_DX[193:189];
+	  //dffe_ref dfff(data_resultRDY, dataRDY, ~clock, 1'b1, reset);
+	  wire isAddi2, notAddi2, isAdd2, isSub2;
+	  not notAdi2(notAddi2, isAddi2);
+	  wire zeroOp2 = (ALUop2==5'b0);
+	  and alucheck2(isAddi2, output_DX[271], zeroOp);  
+	  and aluCheck12(isAdd2, zeroOp2, notAddi2);
+	  assign isSub2 = (ALUop2==5'b1);
+	  wire [31:0] result2, latch_result2;
+	 
 	  
+	   tristate_buffer tovf21(32'b1, isAdd2, result2);
+		tristate_buffer tovf12(32'd2, isAddi2, result2);
+		tristate_buffer tovf22(32'd3, isSub2, result2);
+		
+	 assign latch_result2 = overflow2 ? result2 : data_result2;
 	  
-	  
-	  
-	  
-	// X/M latch
+    /////////////////////////////////////////////////////////
+	//****************** XM LATCH **********************////
+	///////////////////////////////////////////////////////
 	   wire XM_MemWrite, XM_MemToReg, XM_regWrite,XM_JAL,XM_JR, XM_JP, XM_branch;
 		wire [31:0] XM_NextJumpPc, XM_rd, XM_rs, XM_dataB;
 		
-		wire[78:0] input_XM;// output_XM;
-		/*assign input_XM[114] = output_DX[148];//MemRead
-		assign input_XM[113] = output_DX[147];// noop
-		assign input_XM[112] = output_DX[146]; //MemWrite
-		assign input_XM[111] = output_DX[141]; //MemToReg
-		assign input_XM[110] = output_DX[142]; //regWrite
-		assign input_XM[109] = output_DX[145]; //JAL
-		assign input_XM[108] = output_DX[144]; //JR
-      assign input_XM[107] = output_DX[140]; //JP
-		assign input_XM[106] = output_DX[139]; //branch
-		assign input_XM[105:74] = nextJumpPC; //nextJumpPc*/
+		wire[157:0] input_XM;// output_XM;
+		//newer instructions signals
+		assign input_XM[157] = output_DX[268];//MemRead
+		assign input_XM[156] = output_DX[267];// noop
+		assign input_XM[155] = output_DX[266]; //MemWrite
+		assign input_XM[154] = output_DX[261]; //MemToReg
+		assign input_XM[153] = output_DX[262]; //regWrite
+		assign input_XM[152:148] = destRD2; // rd; //rd should be choose btw rstatus and previous one
+		assign input_XM[147:143] = output_DX[188:184]; //rs
+		assign input_XM[142:111] = ALU_dataB2; //dataB
+		assign input_XM[110:79] = latch_result2; //ALU result
+		//Older instruction signals
 		assign input_XM[78] = output_DX[148];//MemRead
 		assign input_XM[77] = output_DX[147];// noop
 		assign input_XM[76] = output_DX[146]; //MemWrite
@@ -660,35 +720,56 @@ module processor(
 /**********************************************************************************************
 *******************/// memory stage/////*****************************************************/
 
-	   wire [31:0] dmem_data;
+	   wire [31:0] dmem_data_a;
+		wire [31:0] dmem_data_b;
 	  //calculation of PCSrc
 	  // and andBranch(PCSrc, output_XM[0],output_XM[106]); //this will need to be extended to include jumps
 	  
 	  //output inputs to dmem and get the outputs -> read data save it to the latch
 	  assign address_dmem_a = output_XM[11:0];
+	  assign address_dmem_b = output_XM[90:79];
 	  assign data_a = muxM ?  data_writeReg_a  : output_XM[31:0];
+	  assign data_b = data_writeReg_b;  //add bypass later
+	  assign wren_b =output_XM[155];
 	  assign wren_a = output_XM[76];
-	  assign dmem_data = q_dmem_a;
-	 
-	 // M/W latch
-	  wire[76:0] input_MW;// output_MW;
+	  assign dmem_data_a = q_dmem_a;
+	  assign dmem_data_b = q_dmem_b;
+	  
+    /////////////////////////////////////////////////////////
+	//****************** MW LATCH **********************////
+	///////////////////////////////////////////////////////
+	  wire[153:0] input_MW;// output_MW;
+	  
+	  
+	  assign input_MW[153] = output_XM[156]; //noop
+	  assign input_MW[152] = output_XM[154]; //MemToReg
+	  assign input_MW[151] = output_XM[153];//regWrite
+	  assign input_MW[150:146] = output_XM[152:148]; //rd
+	  assign input_MW[145:141] = output_XM[147:143]; //rs
+	  assign input_MW[140:109] = dmem_data_b; //data from memory
+	  assign input_MW[108:77] = output_XM[110:79]; //ALU result
 	  
 	  assign input_MW[76] = output_XM[77]; //noop
 	  assign input_MW[75] = output_XM[75]; //MemToReg
 	  assign input_MW[74] = output_XM[74];//regWrite
 	  assign input_MW[73:69] = output_XM[73:69]; //rd
 	  assign input_MW[68:64] = output_XM[68:64]; //rs
-	  assign input_MW[63:32] = dmem_data; //data from memory
+	  assign input_MW[63:32] = dmem_data_a; //data from memory
 	  assign input_MW[31:0] = output_XM[31:0]; //ALU result
 	  
 	  MW_latch MW(clock, 1'b1, reset, output_MW, input_MW);
 	  
-	  
-	 //writeback
+	 	 /////////////////////////////////////////////////////////////////////////////////////////////////////
+   /********************************** WRITEBACK  Stage **************************************************/
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	 assign data_writeReg_a = output_MW[75] ? output_MW[63:32] : output_MW[31:0];
 	 assign ctrl_writeEnable_a = output_MW[74];
 	 assign ctrl_writeReg_a = output_MW[76] ? 5'b0 : output_MW[73:69];
 	 
+	 assign data_writeReg_b = output_MW[152] ? output_MW[140:109] : output_MW[108:77];
+	 assign ctrl_writeEnable_b = output_MW[151];
+	 assign ctrl_writeReg_b = output_MW[153] ? 5'b0 : output_MW[150:146];
 	 //bypass logic
 	  wire [1:0] ALUinA, ALUinB;
 	  wire muxM;
