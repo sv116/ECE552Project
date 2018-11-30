@@ -40,11 +40,11 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, dat
     output wren;
     wire [31:0] q_dmem;
     dmem my_dmem(
-        .address    (address_dmem),       // address of data
-        .clock      (~clock),                  // may need to invert the clock
-        .data	    (data),    // data you want to write
-        .wren	    (wren),      // write enable
-        .q          (q_dmem)    // data from dmem
+        .address		(address_dmem),	// address of data
+        .clock			(~clock),			// may need to invert the clock
+        .data			(data),				// data you want to write
+        .wren			(wren),				// write enable
+        .q				(q_dmem)				// data from dmem
     );
 
     /** REGFILE **/
