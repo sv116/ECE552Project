@@ -48,7 +48,7 @@ and stallNotReady(multStall, multdivOp, not_ready);
 assign DXWrite = multStall ? 1'b0 : 1'b1;
 assign XMWrite = multStall ? 1'b0 : 1'b1;
 
-or bigOR(stall, s[0], s[1], s[2], stallB, stallJ, multStall);
+or bigOR(stall, s[0], s[1], s[2], stallB, stallJ); //,multStall
 
 wire Stall,MULT;
 dffe_ref drf(Stall, stall, ~clock, 1'b1, reset);
@@ -56,7 +56,7 @@ dffe_ref drf1(MULT, multStall, ~clock, 1'b1, reset);
 
 assign FDWrite = Stall ? 1'b0 : 1'b1;
 assign PCWrite = Stall ? 1'b0 : 1'b1;
-assign control = MULT ? 1'b0 :  Stall;
+assign control = MULT ? 1'b0 :  Stall; //MULT?
 
 
 endmodule

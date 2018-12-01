@@ -20,26 +20,31 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_a, cycles, q_imem_a, q_imem_b,
+module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_a, q_imem_a, q_imem_b,
     address_imem_a, address_imem_b, rden_a, rden_b,
 	 outputFD,
 	 dx1, dx2,
-	 output_XM,
-	 output_MW,
+	 xm1, xm2,
+	 mw1, mw2,
 	 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,  branchTaken, branchA, branchB, muxBranchA, muxBranchB, lessThan1 );
     input clock, reset;
 	 
 	  
-	 output [31:0] cycles,  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
+	 output [31:0]  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
 	 output [95:0] outputFD;
 	 wire [271:0] output_DX;
-	 output [151:0] dx1 =output_DX[151:0];
+	 wire [157:0] output_XM;
+	 wire [153:0] output_MW;
+	 output [151:0] dx1 = output_DX[151:0];
 	 output [119:0] dx2 = output_DX[271:152];
-	 output [78:0] output_XM;
-	 output [76:0] output_MW;
+	 output [78:0] xm1 = output_XM[78:0];
+	 output [78:0] xm2 = output_XM[157:79]; 
+	 output [76:0] mw1 = output_MW[76:0];
+	 output [76:0] mw2 = output_MW[153:77];
 	 output ALUSrc,  branchTaken, lessThan1;
     output [4:0] ALUop;
 	 output [1:0] muxBranchA, muxBranchB;
+	 
     /** IMEM **/
    
     output [11:0] address_imem_a;
@@ -152,7 +157,6 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 		 data_readRegAb,                 // I: Data from port A of regfile b
 		 data_readRegBb,                 // I: Data from port B of regfile b
 		  
-		  cycles,
 		 outputFD,
 		 output_DX,
 		 output_XM,

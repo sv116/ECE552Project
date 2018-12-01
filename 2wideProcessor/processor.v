@@ -86,7 +86,7 @@ module processor(
 	 data_readRegAb,                 // I: Data from port A of regfile b
     data_readRegBb,                 // I: Data from port B of regfile b
 	 	
-	 cycles,
+	 
 	 outputFD,
 	 output_DX,
 	 output_XM,
@@ -104,7 +104,7 @@ module processor(
 	  begin
 			  cycle_count <= cycle_count+1;
 	  end
-	output [31:0] cycles = cycle_count;
+	wire [31:0] cycles = cycle_count;
 		
     // Control signals
     input clock, reset;
@@ -211,7 +211,7 @@ module processor(
 	 assign inputFD[63:32] = NextPC;
 	 assign inputFD[95:64] = FD_flush ? 32'd0 : q_imem_b;
 	 
-	 FD_latch fd(clock, FDWrite, reset, outputFD, inputFD);
+	 FD_latch fd(clock, FDWrite, FDWrite2, reset, outputFD, inputFD);
 	 
 	 /////////////////////////////////////////////////////////////////////////////////////////////////////
     /********************************** DECODE Stage **************************************************/
@@ -245,7 +245,7 @@ module processor(
 	 wire branch, JP, JR, JAL, MemRead, MemWrite,MemToReg;
 	 wire branch2, JP2, JR2, JAL2, MemRead2, MemWrite2, MemToReg2;
 	 wire regWrite, regWrite2;
-	 wire control, control2;
+	 wire control, control1, control2;
 	 wire ALUSrc2;
 	 
 	 instruction_decoder IR(opcode,i0, i1, i2, i3, i4, i5, i6, i7, i8, i21, i22);
@@ -253,12 +253,16 @@ module processor(
 
 	 //hazard checking
 	 wire bex, setx, bex2, setx2;
+	 wire FDWrite2, PCWrite2, DXWrite2, XMWrite2;
 	 
 	             //MemRead                                              dx-rd                                     xm-rd              xm-memread
 	 hazardLogic hl(JR, bex, output_DX[142], clock, reset, output_DX[148], output_DX[36:32], output_DX[41:37], rt, rs, rd, output_XM[73:69],
 						branch, output_XM[78], FDWrite, PCWrite, DXWrite, XMWrite, control, output_DX[6:2], data_resultRDY);
-						
-						
+	
+	 //DX and XMWrite are used only for multiplicatio and since we are not using multiplication these are not as important
+	 hazardLogic hl2(JR2, bex2, output_DX[262], clock, reset, output_DX[268], output_DX[188:184], output_DX[193:189], rt2, rs2, rd2, output_XM[152:148],
+						branch2, output_XM[157], FDWrite2, PCWrite2, DXWrite2, XMWrite2, control1, output_DX[158:154], data_resultRDY2);					
+	 assign control2 = control ? control : control1;
 	 controller C(i0, i1, i2, i3, i4, i5, i6, i7, i8, i21, i22, control, regWrite, ALUSrc, 
                   branch, JP, JR, JAL, MemRead, MemWrite, MemToReg, bex, setx); 
 						
@@ -374,7 +378,9 @@ module processor(
 	 and andblt2(blttaken2, in6, less2);
 	 or orbranch2(branchTaken2, bnetaken2, blttaken2);
 	 
-	//jump taken? bex
+	// bex reading register rstatus (jump taken?)
+	
+	  //bex for line 1
 	  wire [31:0] rstatus;
 	  wire [1:0] notBex, bexMux;
 	  wire enBx0, enBx1, enBx2;
@@ -387,25 +393,36 @@ module processor(
 	  tristate_buffer tbX4(dataA,           enBx0, rstatus);
 	  tristate_buffer tbX5(data_writeReg_a,   enBx1, rstatus);
 	  tristate_buffer tbX6(output_XM[31:0], enBx2, rstatus);
-	  
-	  //bex for line 1
+
 	  wire  bexTaken;
-	  wire bexTaken1;
+	  wire  bexTaken1;
 	  //branchCalc cb(rstatus, 32'b0, bexTaken1, bexTaken2);
 	  assign bexTaken1 = rstatus!= 32'b0;
 	  and andbcb(bexTaken, i22, bexTaken1);
 	  
 	 //bex for line 2 
-	  wire [31:0] rstatus2 = dataA2; //bypassing needs to be added
+	  wire [31:0] rstatus2;// = dataA2; //bypassing needs to be added
+	  wire [1:0] notBex2, bexMux2;
+	  wire en2Bx0, en2Bx1, en2Bx2;
+	  not not2stat1(notBex2[0], bexMux2[0]);
+	  not not2stat2(notBex2[1], bexMux2[1]);
+	  and and2Bxx1(en2Bx0, notBex2[1], notBex2[0]);
+	  and and2Bxx2(en2Bx1, notBex2[1], bexMux2[0]);
+	  and and2Bxx3(en2Bx2, bexMux2[1], notBex2[0]);
+	  
+	  tristate_buffer tb2X4(dataA2,           enBx0, rstatus2);
+	  tristate_buffer tb2X5(data_writeReg_b,   enBx1, rstatus2);
+	  tristate_buffer tb2X6(output_XM[110:79], enBx2, rstatus2);
+
 	  wire  bexTaken2;
-	  wire bexTaken12;
+	  wire  bexTaken12;
 	  assign bexTaken12 = rstatus2!= 32'b0;
 	  and andbcb2(bexTaken2, in22, bexTaken12);
 	  
 	  //assign bexTaken1 = (rstatus==32'b0) ? 1'b0 : 1'b1;
 	 // and andBexT(bexTaken, bexTaken1, output_DX[149]);
 	 
-	 //JR for line 1
+	 //JR for line 1 - 
 	  wire [31:0] rdReg;
 	  wire [1:0] jrMux;
 	  wire [1:0] not_jrMux;
@@ -426,7 +443,19 @@ module processor(
 	  
 	  
 	  //JR for line 2
-	  wire [31:0] rdReg2 = dataA2; //add bypassing later
+	  wire [31:0] rdReg2;// = dataA2; //add bypassing later
+	  wire [1:0] jrMux2;
+	  wire [1:0] not_jrMux2;
+	  wire en2J0, en2J1, en2J2;
+	  not not2j1(not_jrMux2[0], jrMux2[0]);
+	  not not2j2(not_jrMux2[1], jrMux2[1]);
+	  and and2j1(en2J0, not_jrMux2[1], not_jrMux2[0]);
+	  and and2j2(en2J1, not_jrMux2[1], jrMux2[0]);
+	  and and2j3(en2J2, jrMux2[1], not_jrMux2[0]);
+	  
+	  tristate_buffer tb2j0(dataA2,           en2J0, rdReg2);
+	  tristate_buffer tb2j1(data_writeReg_b,   en2J1, rdReg2);
+	  tristate_buffer tb2j2(output_XM[110:79], en2J2, rdReg2);
 	  
 	 /** Flush logic **/
 	 
@@ -451,7 +480,7 @@ module processor(
 	 //if the newer instruction is jumping then the older should not be flushed
 	 
 	 wire [1:0] pcSourceIn2, pcSource2In2, pcSource3In2, pcSource4In2; 
-	 assign pcSourceIn2 = branchTaken ? 2'b1: 2'b0;
+	 assign pcSourceIn2 = branchTaken2 ? 2'b1: 2'b0;
 	 assign pcSource2In2 = ctrl_pcTarget2 ? 2'd2 : pcSourceIn2;
 	 assign pcSource3In2 = bexTaken2 ? 2'd2 : pcSource2In2;
 	 assign pcSource4In2 = in4 ?  2'd3 : pcSource3In2; //JR assigns 3
@@ -602,7 +631,7 @@ module processor(
 		  //later add mult div to your ALU
 	     //include exception rstatus
 	  wire dataRDY;  
-	  wire [4:0] destRD = overflow ? 5'd30 : output_DX[41:37];
+	  wire [4:0] destRD = o ? 5'd30 : output_DX[41:37];
 	  dffe_ref dfff(data_resultRDY, dataRDY, ~clock, 1'b1, reset);
 	  wire isAddi, notAddi, isAdd, isSub;
 	  not notAdi(notAddi, isAddi);
@@ -618,7 +647,7 @@ module processor(
 		tristate_buffer tovf1(32'd2, isAddi, result);
 		tristate_buffer tovf2(32'd3, isSub, result);
 		
-	 assign latch_result = overflow ? result : data_result;
+	 assign latch_result = o ? result : data_result;
 	  /////////////////////////////////////////////////
 	  ////////////// *** Line  2 *** /////////////////
 	 ////////////////////////////////////////////////
@@ -633,35 +662,35 @@ module processor(
 	  
 	  
 	  //choose second input, either imm for addi or dataB from reg file
-	  assign ALU_dataB2 = output_DX[258] ? output_DX[183:152] : output_DX[225:194]; 
+	  assign ALU_data2B1 = output_DX[258] ? output_DX[183:152] : output_DX[225:194]; 
 	  
 	  //bypass tristate buffers
-//	  not notalB1(notALUinB1[0], ALUinB[0]);
-//	  not notalB2(notALUinB1[1], ALUinB[1]);
-//	  and andalB1(enB0, notALUinB1[1], notALUinB1[0]);
-//	  and andalB2(enB1, notALUinB1[1],     ALUinB[0]);
-//	  and andalB3(enB2,     ALUinB[1], notALUinB1[0]);
-//	  
-//	  tristate_buffer tbB1(ALU_dataB1,     enB0, ALU_dataB);
-//	  tristate_buffer tbB2(data_writeReg_a,  enB1, ALU_dataB);
-//	  tristate_buffer tbB3(output_XM[31:0],enB2, ALU_dataB);
+	  not not2alB1(notALUin2B1[0], ALUinB2[0]);
+	  not not2alB2(notALUin2B1[1], ALUinB2[1]);
+	  and and2alB1(en2B0, notALUin2B1[1], notALUin2B1[0]);
+	  and and2alB2(en2B1, notALUin2B1[1],     ALUinB2[0]);
+	  and and2alB3(en2B2,     ALUinB2[1], notALUin2B1[0]);
+	  
+	  tristate_buffer tb2B1(ALU_data2B1,     en2B0, ALU_dataB2);
+	  tristate_buffer tb2B2(data_writeReg_b,  en2B1, ALU_dataB2);
+	  tristate_buffer tb2B3(output_XM[110:79],en2B2, ALU_dataB2);
 	  
 	  
 	  //either zeros for addi or regular aluopcode
 	  assign ALUop2 = output_DX[263] ? 5'b0 : output_DX[158:154]; 
 	  
-	  //choose first inout, currently taking only from reg file, later add bypass options like example commented out
-	  assign ALU_dataA2 = output_DX[257:226];
-//	  
-//	  not notalA1(notALUinA1[0], ALUinA[0]);
-//	  not notalA2(notALUinA1[1], ALUinA[1]);
-//	  and andalA1(en0, notALUinA1[1], notALUinA1[0]);
-//	  and andalA2(en1, notALUinA1[1],     ALUinA[0]);
-//	  and andalA3(en2,     ALUinA[1], notALUinA1[0]);
-//	  
-//	  tristate_buffer tb1(output_DX[105:74], en0, ALU_dataA);
-//	  tristate_buffer tb2(data_writeReg_a,     en1, ALU_dataA);
-//	  tristate_buffer tb3(output_XM[31:0],   en2, ALU_dataA);
+	  //choose first input, currently taking only from reg file, later add bypass options like example commented out
+	  //assign ALU_dataA2 = output_DX[257:226];
+	  
+	  not not2alA1(notALUin2A1[0], ALUinA2[0]);
+	  not not2alA2(notALUin2A1[1], ALUinA2[1]);
+	  and and2alA1(en20, notALUin2A1[1], notALUin2A1[0]);
+	  and and2alA2(en21, notALUin2A1[1],     ALUinA2[0]);
+	  and and2alA3(en22,     ALUinA2[1], notALUin2A1[0]);
+	  
+	  tristate_buffer ttb1(output_DX[257:226], en20, ALU_dataA2);
+	  tristate_buffer ttb2(data_writeReg_b,     en21, ALU_dataA2);
+	  tristate_buffer ttb3(output_XM[110:79],   en22, ALU_dataA2);
 	  
 	  wire data_resultRDY2, data_exception2;
 	  
@@ -670,7 +699,7 @@ module processor(
 	     //include exception rstatus
 	  wire dataRDY2; 
 	  
-	  wire [4:0] destRD2 = overflow2 ? 5'd30 : output_DX[193:189];
+	  wire [4:0] destRD2 = o2 ? 5'd30 : output_DX[193:189];
 	  //dffe_ref dfff(data_resultRDY, dataRDY, ~clock, 1'b1, reset);
 	  wire isAddi2, notAddi2, isAdd2, isSub2;
 	  not notAdi2(notAddi2, isAddi2);
@@ -685,7 +714,7 @@ module processor(
 		tristate_buffer tovf12(32'd2, isAddi2, result2);
 		tristate_buffer tovf22(32'd3, isSub2, result2);
 		
-	 assign latch_result2 = overflow2 ? result2 : data_result2;
+	 assign latch_result2 = o2 ? result2 : data_result2;
 	  
     /////////////////////////////////////////////////////////
 	//****************** XM LATCH **********************////
@@ -729,7 +758,7 @@ module processor(
 	  assign address_dmem_a = output_XM[11:0];
 	  assign address_dmem_b = output_XM[90:79];
 	  assign data_a = muxM ?  data_writeReg_a  : output_XM[31:0];
-	  assign data_b = data_writeReg_b;  //add bypass later
+	  assign data_b = muxM2 ? data_writeReg_b : output_XM[110:79];  //Added Bypass from XM
 	  assign wren_b =output_XM[155];
 	  assign wren_a = output_XM[76];
 	  assign dmem_data_a = q_dmem_a;
@@ -770,9 +799,15 @@ module processor(
 	 assign data_writeReg_b = output_MW[152] ? output_MW[140:109] : output_MW[108:77];
 	 assign ctrl_writeEnable_b = output_MW[151];
 	 assign ctrl_writeReg_b = output_MW[153] ? 5'b0 : output_MW[150:146];
-	 //bypass logic
+	 
+	 /**  Bypass logic **/
 	  wire [1:0] ALUinA, ALUinB;
-	  wire muxM;
+	  wire [1:0] ALUinA2, ALUinB2;
+	 
+	  wire muxM, muxM2;
      bypassLogic bpl(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
 	               output_XM[73:69], output_MW[73:69], rs, rd, ALUinA, ALUinB, muxM, muxBranchA, muxBranchB, bexMux, jrMux);
+	
+	  bypassLogic bpl2(output_MW[151], output_XM[153], output_XM[155], output_MW[152], output_DX[188:184], output_DX[168:164],
+	               output_XM[152:148], output_MW[150:146], rs2, rd2, ALUinA2, ALUinB2, muxM2, muxBranchA2, muxBranchB2, bexMux2, jrMux2);
 endmodule
