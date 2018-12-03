@@ -73,7 +73,6 @@ assign bM = b3 ? 2'd1 : 2'b0;
 assign bexMux = b4 ? 2'd2 : bM;
 
 
-
 //jr bypass --- rdmux
 wire j1, j2;
 output [1:0] jrMux;

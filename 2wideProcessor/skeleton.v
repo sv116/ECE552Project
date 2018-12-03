@@ -9,9 +9,21 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cycles,
+/**
+ * NOTE: you should not need to change this file! This file will be swapped out for a grading
+ * "skeleton" for testing. We will also remove your imem and dmem file.
+ *
+ * NOTE: skeleton should be your top-level module!
+ *
+ * This skeleton file serves as a wrapper around the processor to provide certain control signals
+ * and interfaces to memory elements. This structure allows for easier testing, as it is easier to
+ * inspect which signals the processor tries to assert when.
+ */
+
+module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_a, cycles, q_imem_a, q_imem_b,
+    address_imem_a, address_imem_b, rden_a, rden_b,
 	 outputFD,
-	 output_DX,
+	 dx1, dx2,
 	 output_XM,
 	 output_MW,
 	 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,  branchTaken, branchA, branchB, muxBranchA, muxBranchB, lessThan1 );
@@ -19,8 +31,10 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
 	 
 	  
 	 output [31:0] cycles,  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
-	 output [63:0] outputFD;
-	 output [151:0] output_DX;
+	 output [95:0] outputFD;
+	 wire [271:0] output_DX;
+	 output [151:0] dx1 =output_DX[151:0];
+	 output [119:0] dx2 = output_DX[271:152];
 	 output [78:0] output_XM;
 	 output [76:0] output_MW;
 	 output ALUSrc,  branchTaken, lessThan1;
@@ -28,12 +42,12 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
 	 output [1:0] muxBranchA, muxBranchB;
     /** IMEM **/
    
-    wire [11:0] address_imem_a;
-	 wire [11:0] address_imem_b;
-    wire [31:0] q_imem_a;
-	 wire [31:0] q_imem_b;
-	 wire	  rden_a;
-    wire   rden_b;
+    output [11:0] address_imem_a;
+	 output [11:0] address_imem_b;
+    output [31:0] q_imem_a;
+	 output [31:0] q_imem_b;
+	 output	 rden_a;
+    output   rden_b;
     imem2 my_imem(
         .address_a    (address_imem_a),	 // address of data a
 		  .address_b    (address_imem_b),
@@ -55,7 +69,7 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
     wire [31:0] q_dmem_a;
 	 wire [31:0] q_dmem_b;
 	 
-    dmem my_dmem(
+    dmem2 my_dmem(
         .address_a    (address_dmem_a),       // address of data a
 		  .address_b    (address_dmem_b),       // address of data b
         .clock        (~clock),                  // may need to invert the clock
@@ -69,17 +83,20 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
 
     /** REGFILE **/
 
-    output ctrl_writeEnable_a, ctrl_writeEnable_b;
-    output [4:0] ctrl_writeReg_a, ctrl_writeReg_b;
+    output ctrl_writeEnable_a;
+	 wire ctrl_writeEnable_b;
+    output [4:0] ctrl_writeReg_a;
+	 wire ctrl_writeReg_b;
 	 wire [4:0] ctrl_readRegAa, ctrl_readRegBa, ctrl_readRegAb, ctrl_readRegBb;
-    output [31:0] data_writeReg_a, data_writeReg_b;
+    output [31:0] data_writeReg_a;
+	 wire data_writeReg_b;
     wire [31:0] data_readRegAa, data_readRegBa, data_readRegAb, data_readRegBb;
     
 	 regfile my_regfile(
-			 clock,
+			 ~clock,
 			 ctrl_writeEnable_a,
 			 ctrl_writeEnable_b,
-			 ctrl_reset,
+			 reset,
 			 ctrl_writeReg_a,
 			 ctrl_writeReg_b,
 			 ctrl_readRegAa,
@@ -111,7 +128,7 @@ module skeleton(clock, reset,ctrl_writeEnable, ctrl_writeReg, data_writeReg, cyc
 
         // Dmem
         address_dmem_a,                  // O: The address of the data to get or put from/to dmem
-		  address_dmem_a,
+		  address_dmem_b,
         data_a,                           // O: The data to write to dmem
 		  data_b,
         wren_a,                           // O: Write enable for dmem
