@@ -521,6 +521,8 @@ module processor(
 	 //bypass logic
 	  wire [1:0] ALUinA, ALUinB;
 	  wire muxM;
-     bypassLogic bpl(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
+    // bypassLogic bpl(output_MW[74],  output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
+//	               output_XM[73:69], output_MW[73:69], rs, rd, ALUinA, ALUinB, muxM, muxBranchA, muxBranchB, bexMux, jrMux);
+	  bypassLogic2 bpl(output_MW[74],  output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
 	               output_XM[73:69], output_MW[73:69], rs, rd, ALUinA, ALUinB, muxM, muxBranchA, muxBranchB, bexMux, jrMux);
 endmodule
