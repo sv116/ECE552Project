@@ -566,15 +566,16 @@ module processor(
 	  output [4:0] ALUop;
 	  wire isNotEqual, isLessThan, overflow, en0, en1, en2, enB0, enB1, enB2;
 	  wire [1:0] notALUinA1, notALUinB1;
+	  
 	  //choose second input, either imm for addi or dataB from reg file
 	  assign ALU_dataB1 = output_DX[138] ? output_DX[31:0] : output_DX[73:42];
 	  
 	  //bypass tristate buffers
-	  not notalB1(notALUinB1[0], ALUinB[0]);
-	  not notalB2(notALUinB1[1], ALUinB[1]);
+	  not notalB1(notALUinB1[0], ALUin1B[0]);
+	  not notalB2(notALUinB1[1], ALUin1B[1]);
 	  and andalB1(enB0, notALUinB1[1], notALUinB1[0]);
-	  and andalB2(enB1, notALUinB1[1],     ALUinB[0]);
-	  and andalB3(enB2,     ALUinB[1], notALUinB1[0]);
+	  and andalB2(enB1, notALUinB1[1],     ALUin1B[0]);
+	  and andalB3(enB2,     ALUin1B[1], notALUinB1[0]);
 	  
 	  tristate_buffer tbB1(ALU_dataB1,     enB0, ALU_dataB);
 	  tristate_buffer tbB2(data_writeReg_a,  enB1, ALU_dataB);
@@ -586,11 +587,11 @@ module processor(
 	  
 	  //choose first input
 	  
-	  not notalA1(notALUinA1[0], ALUinA[0]);
-	  not notalA2(notALUinA1[1], ALUinA[1]);
+	  not notalA1(notALUinA1[0], ALUin1A[0]);
+	  not notalA2(notALUinA1[1], ALUin1A[1]);
 	  and andalA1(en0, notALUinA1[1], notALUinA1[0]);
-	  and andalA2(en1, notALUinA1[1],     ALUinA[0]);
-	  and andalA3(en2,     ALUinA[1], notALUinA1[0]);
+	  and andalA2(en1, notALUinA1[1],     ALUin1A[0]);
+	  and andalA3(en2,     ALUin1A[1], notALUinA1[0]);
 	  
 	  tristate_buffer tb1(output_DX[105:74], en0, ALU_dataA);
 	  tristate_buffer tb2(data_writeReg_a,     en1, ALU_dataA);
@@ -619,6 +620,9 @@ module processor(
 		tristate_buffer tovf2(32'd3, isSub, result);
 		
 	 assign latch_result = overflow ? result : data_result;
+	 
+	 
+	 
 	  /////////////////////////////////////////////////
 	  ////////////// *** Line  2 *** /////////////////
 	 ////////////////////////////////////////////////
@@ -636,15 +640,16 @@ module processor(
 	  assign ALU_dataB2 = output_DX[258] ? output_DX[183:152] : output_DX[225:194]; 
 	  
 	  //bypass tristate buffers
-//	  not notalB1(notALUinB1[0], ALUinB[0]);
-//	  not notalB2(notALUinB1[1], ALUinB[1]);
-//	  and andalB1(enB0, notALUinB1[1], notALUinB1[0]);
-//	  and andalB2(enB1, notALUinB1[1],     ALUinB[0]);
-//	  and andalB3(enB2,     ALUinB[1], notALUinB1[0]);
-//	  
-//	  tristate_buffer tbB1(ALU_dataB1,     enB0, ALU_dataB);
-//	  tristate_buffer tbB2(data_writeReg_a,  enB1, ALU_dataB);
-//	  tristate_buffer tbB3(output_XM[31:0],enB2, ALU_dataB);
+	  not notalB1_2(notALUin2B1[0], ALUin2B[0]);
+	  not notalB2_2(notALUin2B1[1], ALUin2B[1]);
+
+	  and andalB1_2(enB20, notALUin2B1[1], notALUin2B1[0]);
+	  and andalB2_2(enB21, notALUin2B1[1],     ALUin2B[0]);
+	  and andalB3_2(enB22,     ALUin2B[1], notALUin2B1[0]);
+	  
+	  tristate_buffer tbB1_2(ALU_data2B1,     en2B0, ALU_dataB2);
+	  tristate_buffer tbB2_2(data_writeReg_a_2,  en2B1, ALU_dataB2);
+	  tristate_buffer tbB3_2(output_XM[110:79], en2B2, ALU_dataB2);
 	  
 	  
 	  //either zeros for addi or regular aluopcode
@@ -653,15 +658,16 @@ module processor(
 	  //choose first inout, currently taking only from reg file, later add bypass options like example commented out
 	  assign ALU_dataA2 = output_DX[257:226];
 //	  
-//	  not notalA1(notALUinA1[0], ALUinA[0]);
-//	  not notalA2(notALUinA1[1], ALUinA[1]);
-//	  and andalA1(en0, notALUinA1[1], notALUinA1[0]);
-//	  and andalA2(en1, notALUinA1[1],     ALUinA[0]);
-//	  and andalA3(en2,     ALUinA[1], notALUinA1[0]);
-//	  
-//	  tristate_buffer tb1(output_DX[105:74], en0, ALU_dataA);
-//	  tristate_buffer tb2(data_writeReg_a,     en1, ALU_dataA);
-//	  tristate_buffer tb3(output_XM[31:0],   en2, ALU_dataA);
+	  not notalA1_2(notALUin2A1[0], ALUin2A[0]);
+	  not notalA2_2(notALUin2A1[1], ALUin2A[1]);
+
+	  and andalA1_2(en0_2, notALUin2A1[1], notALUin2A1[0]);
+	  and andalA2_2(en1_2, notALUin2A1[1],     ALUin2A[0]);
+	  and andalA3_2(en2_2,     ALUin2A[1], notALUin2A1[0]);
+  
+	  tristate_buffer tb1_2(output_DX[105:74], en20, ALU_dataA2);
+	  tristate_buffer tb2_2(data_writeReg_a,     en21, ALU_dataA2);
+	  tristate_buffer tb3_2(output_XM[110:79],   en22, ALU_dataA2);
 	  
 	  wire data_resultRDY2, data_exception2;
 	  
@@ -770,9 +776,19 @@ module processor(
 	 assign data_writeReg_b = output_MW[152] ? output_MW[140:109] : output_MW[108:77];
 	 assign ctrl_writeEnable_b = output_MW[151];
 	 assign ctrl_writeReg_b = output_MW[153] ? 5'b0 : output_MW[150:146];
-	 //bypass logic
-	  wire [1:0] ALUinA, ALUinB;
-	  wire muxM;
-     bypassLogic bpl(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
-	               output_XM[73:69], output_MW[73:69], rs, rd, ALUinA, ALUinB, muxM, muxBranchA, muxBranchB, bexMux, jrMux);
+	 
+	 
+	 ////////////////////////////////bypass logic/////////////////////////////////
+	 // adding 2nd pipe bypassing 12/3
+	 
+	  wire [1:0] ALUin1A, ALUin1B, ALUin2A, ALUin2B;
+	  wire muxM1, muxM2;
+	  
+	  //////// line 1 ////////////
+    bypassLogic bpl(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
+ 	               output_XM[73:69], output_MW[73:69], rs, rd, ALUin1A, ALUin1B, muxM1, muxBranchA, muxBranchB, bexMux, jrMux);
+    
+	 ///// line 2 ///////////
+	 bypassLogic bpl_2(output_MW[151], output_XM[153], output_XM[155], output_MW[152], output_DX[188:184], output_DX[168:164],
+	               output_XM[152:148], output_MW[150:146], rs2, rd2, ALUin2A, ALUin2B, muxM2, muxBranchA, muxBranchB, bexMux, jrMux);
 endmodule
