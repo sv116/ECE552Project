@@ -315,6 +315,9 @@ module processor(
 	 //flush instr in FD
 	 //where does dataA come from, what about B? rd, rs
 	 
+	 
+	 // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@---------------------
+	 
 	 //choose first input for branch comparison for line 1
 	  output [31:0] branchA, branchB;
 	  output [1:0] muxBranchA, muxBranchB;
@@ -349,10 +352,14 @@ module processor(
 	  tristate_buffer tbC5(data_writeReg_a,   enC4, branchB);
 	  tristate_buffer tbC6(output_XM[31:0], enC5, branchB);
 	
+	////////////////
+	//Branch Calc //
+	////////////////
+	
+	// branch calc for line 1
 	 wire  notEqual1, bnetaken, blttaken;
 	 output less;
 	 output branchTaken;
-	 
 	 
 	 assign less = ($signed(branchB) < $signed(branchA));
 	 assign notEqual1 = $signed(branchB)==$signed(branchA);
@@ -373,6 +380,10 @@ module processor(
 	 and andbne2(bnetaken2, in2, notEqual2);
 	 and andblt2(blttaken2, in6, less2);
 	 or orbranch2(branchTaken2, bnetaken2, blttaken2);
+	 
+	 ////////////////
+	// Jump Calc //
+	////////////////
 	 
 	//jump taken? bex
 	  wire [31:0] rstatus;
@@ -395,7 +406,8 @@ module processor(
 	  assign bexTaken1 = rstatus!= 32'b0;
 	  and andbcb(bexTaken, i22, bexTaken1);
 	  
-	 //bex for line 2 
+	  
+	 //jump taken bex for line 2 
 	  wire [31:0] rstatus2 = dataA2; //bypassing needs to be added
 	  wire  bexTaken2;
 	  wire bexTaken12;
@@ -726,6 +738,8 @@ module processor(
 /**********************************************************************************************
 *******************/// memory stage/////*****************************************************/
 
+		// pipes are a and b here
+		
 	   wire [31:0] dmem_data_a;
 		wire [31:0] dmem_data_b;
 	  //calculation of PCSrc
@@ -734,16 +748,20 @@ module processor(
 	  //output inputs to dmem and get the outputs -> read data save it to the latch
 	  assign address_dmem_a = output_XM[11:0];
 	  assign address_dmem_b = output_XM[90:79];
-	  assign data_a = muxM ?  data_writeReg_a  : output_XM[31:0];
-	  assign data_b = data_writeReg_b;  //add bypass later
-	  assign wren_b =output_XM[155];
+	  
+	  assign data_a = muxM1 ? data_writeReg_a : output_XM[31:0];
+	  assign data_b = muxM2 ? data_writeReg_b : output_XM[110:79]; 
+	  
+	  assign wren_b = output_XM[155];
 	  assign wren_a = output_XM[76];
+	  
 	  assign dmem_data_a = q_dmem_a;
 	  assign dmem_data_b = q_dmem_b;
 	  
     /////////////////////////////////////////////////////////
 	//****************** MW LATCH **********************////
 	///////////////////////////////////////////////////////
+	  
 	  wire[153:0] input_MW;// output_MW;
 	  
 	  
@@ -785,7 +803,7 @@ module processor(
 	  wire muxM1, muxM2;
 	  
 	  //////// line 1 ////////////
-    bypassLogic bpl(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
+    bypassLogic bpl_1(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
  	               output_XM[73:69], output_MW[73:69], rs, rd, ALUin1A, ALUin1B, muxM1, muxBranchA, muxBranchB, bexMux, jrMux);
     
 	 ///// line 2 ///////////
