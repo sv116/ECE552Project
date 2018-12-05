@@ -31,9 +31,9 @@ module update_pred(
 	and b_decrement(dec, (branchResult ? 1'b0 : 1'b1), (counter_ip != 2'b00));	// if branch not taken and counternot 0, dec
 	
 	//wire [1:0] update;
-	wire bool_update_counter;
-	and b_update_counter(bool_update_counter, !inc, !dec);
+	wire saturated_counter;
+	and b_update_counter(saturated_counter, !inc, !dec);
 	assign update = inc ? counter_ip + 1'd1 : counter_ip - 1'd1;
-	assign updated_counter = bool_update_counter ? counter_ip : update;
+	assign updated_counter = saturated_counter ? counter_ip : update;
 	
 endmodule

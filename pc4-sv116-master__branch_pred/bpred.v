@@ -33,7 +33,7 @@ endmodule
 
 module bpred(
 	input [1:0] sat_counter_2bit, 	// receives BPT[BHR] = 0-3 (2'b)
-	output wire predictTaken);	// outputs true/false 0-1 = false, 2-3 = true
+	output wire predictTaken);			// outputs true/false 0-1 = false, 2-3 = true
 	
 	wire notTaken;
 	or branch_nN(notTaken, (sat_counter_2bit == 1'd0), (sat_counter_2bit == 1'd1));
