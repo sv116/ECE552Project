@@ -105,7 +105,7 @@ module imem2 (
 		altsyncram_component.clock_enable_output_a = "BYPASS",
 		altsyncram_component.clock_enable_output_b = "BYPASS",
 		altsyncram_component.indata_reg_b = "CLOCK0",
-		altsyncram_component.init_file = "./mif_outputs/test.mif",
+		altsyncram_component.init_file = "./mif_outputs/test2ndLane.mif",
 		altsyncram_component.intended_device_family = "Cyclone IV E",
 		altsyncram_component.lpm_type = "altsyncram",
 		altsyncram_component.numwords_a = 4096,

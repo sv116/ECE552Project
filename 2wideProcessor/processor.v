@@ -94,7 +94,7 @@ module processor(
 	 ALUSrc,
 	 data_result, ALU_dataA, ALU_dataB, ALUop,
 	 branchTaken, branchA, branchB,
-	 muxBranchA, muxBranchB, less
+	 muxBranchA, muxBranchB, less, ignore
      
 );  
 	//Cycle and instruction counter logic -- needs to be updated for two wide
@@ -253,7 +253,7 @@ module processor(
 
 	 //hazard checking
 	 wire bex, setx, bex2, setx2;
-	 wire FDWrite2, PCWrite2, DXWrite2, XMWrite2;
+	 wire FDWrite2, PCWrite2, DXWrite1, XMWrite1;
 	 
 	             //MemRead                                              dx-rd                                     xm-rd              xm-memread
 	 hazardLogic hl(JR, bex, output_DX[142], clock, reset, output_DX[148], output_DX[36:32], output_DX[41:37], rt, rs, rd, output_XM[73:69],
@@ -261,7 +261,7 @@ module processor(
 	
 	 //DX and XMWrite are used only for multiplicatio and since we are not using multiplication these are not as important
 	 hazardLogic hl2(JR2, bex2, output_DX[262], clock, reset, output_DX[268], output_DX[188:184], output_DX[193:189], rt2, rs2, rd2, output_XM[152:148],
-						branch2, output_XM[157], FDWrite2, PCWrite2, DXWrite2, XMWrite2, control1, output_DX[158:154], data_resultRDY2);					
+						branch2, output_XM[157], FDWrite2, PCWrite2, DXWrite1, XMWrite1, control1, output_DX[158:154], data_resultRDY2);					
 	 assign control2 = control ? control : control1;
 	 controller C(i0, i1, i2, i3, i4, i5, i6, i7, i8, i21, i22, control, regWrite, ALUSrc, 
                   branch, JP, JR, JAL, MemRead, MemWrite, MemToReg, bex, setx); 
@@ -490,6 +490,11 @@ module processor(
 	 wire [1:0] PCSrc1;
 	 assign PCSrc1 = pcSource4==2'b0 ? pcSource4In2 : pcSource4;
 	 
+	 wire DXWrite2 =  pcSource4==2'b0;
+	 output ignore;
+	 wire ignore1;
+	 or org(ignore1, branchTaken, ctrl_pcTarget, bexTaken, i4);  //= pcSource4==2'b0 ? regWrite2 : 1'b0;
+	 not notIgnore(ignore, ignore1);
     dffe_ref df(PCSrc[0], PCSrc1[0], ~clock, 1'b1, reset);
 	 dffe_ref df1(PCSrc[1], PCSrc1[1], ~clock, 1'b1, reset);
 	 
@@ -581,14 +586,14 @@ module processor(
 	  assign input_DX[36:32] = rsource; //used in bypass logic
 	  assign input_DX[31:0] = immed;
 	 
-	  DX_latch DX(clock, DXWrite, reset, output_DX, input_DX);
+	  DX_latch DX(clock, DXWrite,DXWrite2, reset, output_DX, input_DX);
 	 
 	 
 	 /////////////////////////////////////////////////////////////////////////////////////////////////////
    /********************************** EXECUTE  Stage **************************************************/
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	
+	 wire nop = output_DX[271:152] == 119'b0;
 	  //instantiate ALU, pass in the opcode, have a mux that chooses btw the aluop and zero, select is addi
 	  wire [31:0] ALU_dataB1;
 	  output [31:0] data_result, ALU_dataA, ALU_dataB;
@@ -725,7 +730,7 @@ module processor(
 		wire[157:0] input_XM;// output_XM;
 		//newer instructions signals
 		assign input_XM[157] = output_DX[268];//MemRead
-		assign input_XM[156] = output_DX[267];// noop
+		assign input_XM[156] = nop;// noop
 		assign input_XM[155] = output_DX[266]; //MemWrite
 		assign input_XM[154] = output_DX[261]; //MemToReg
 		assign input_XM[153] = output_DX[262]; //regWrite

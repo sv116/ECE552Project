@@ -21,16 +21,15 @@
  */
 
 module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_a, q_imem_a, q_imem_b,
-    address_imem_a, address_imem_b, rden_a, rden_b,
+    address_imem_a, address_imem_b, ignore, rden_b, data_writeReg_b, ctrl_writeReg_b, ctrl_writeEnable_b,
 	 outputFD,
 	 dx1, dx2,
 	 xm1, xm2,
-	 mw1, mw2,
-	 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,  branchTaken, branchA, branchB, muxBranchA, muxBranchB, lessThan1 );
+	 mw1, mw2);
     input clock, reset;
 	 
-	  
-	 output [31:0]  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
+	 output ignore; 
+	 wire [31:0]  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
 	 output [95:0] outputFD;
 	 wire [271:0] output_DX;
 	 wire [157:0] output_XM;
@@ -41,9 +40,9 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 	 output [78:0] xm2 = output_XM[157:79]; 
 	 output [76:0] mw1 = output_MW[76:0];
 	 output [76:0] mw2 = output_MW[153:77];
-	 output ALUSrc,  branchTaken, lessThan1;
-    output [4:0] ALUop;
-	 output [1:0] muxBranchA, muxBranchB;
+	 wire ALUSrc,  branchTaken, lessThan1;
+    wire [4:0] ALUop;
+	 wire [1:0] muxBranchA, muxBranchB;
 	 
     /** IMEM **/
    
@@ -51,7 +50,7 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 	 output [11:0] address_imem_b;
     output [31:0] q_imem_a;
 	 output [31:0] q_imem_b;
-	 output	 rden_a;
+	 wire	 rden_a;
     output   rden_b;
     imem2 my_imem(
         .address_a    (address_imem_a),	 // address of data a
@@ -89,12 +88,12 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
     /** REGFILE **/
 
     output ctrl_writeEnable_a;
-	 wire ctrl_writeEnable_b;
+	 output ctrl_writeEnable_b;
     output [4:0] ctrl_writeReg_a;
-	 wire ctrl_writeReg_b;
+	 output [4:0] ctrl_writeReg_b;
 	 wire [4:0] ctrl_readRegAa, ctrl_readRegBa, ctrl_readRegAb, ctrl_readRegBb;
     output [31:0] data_writeReg_a;
-	 wire data_writeReg_b;
+	 output [31:0] data_writeReg_b;
     wire [31:0] data_readRegAa, data_readRegBa, data_readRegAb, data_readRegBb;
     
 	 regfile my_regfile(
@@ -162,7 +161,7 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 		 output_XM,
 		 output_MW,
 		 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,
-		 branchTaken, branchA, branchB,muxBranchA, muxBranchB, lessThan1
+		 branchTaken, branchA, branchB,muxBranchA, muxBranchB, lessThan1, ignore
     );
 
  
