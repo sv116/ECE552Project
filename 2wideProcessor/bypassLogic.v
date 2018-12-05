@@ -3,7 +3,8 @@ module bypassLogic(MW_regWrite, XM_regWrite, XM_MemWrite, MW_MemToReg, DX_rs, DX
 
 input MW_regWrite, XM_MemWrite, MW_MemToReg, XM_regWrite;
 input [4:0] DX_rs, DX_rt, XM_rd, MW_rd, rs, rd; //rs and rd are from the decode stage and used for calcBranch
-output [1:0] ALUinA, ALUinB,muxBranchA, muxBranchB;
+output [1:0] ALUinA, ALUinB;
+output [3:0] muxBranchA, muxBranchB;
 output muxM;
 
 

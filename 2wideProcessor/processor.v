@@ -320,9 +320,10 @@ module processor(
 	 
 	 //choose first input for branch comparison for line 1
 	  output [31:0] branchA, branchB;
-	  output [1:0] muxBranchA, muxBranchB;
+	  output [3:0] muxBranchA, muxBranchB;
 	  wire [1:0] notBranchA, notBranchB;
 	  wire enC0, enC1, enC2, enC3, enC4, enC5;
+	  
 	  not notBcA1(notBranchA[0], muxBranchA[0]);
 	  not notBcA2(notBranchA[1], muxBranchA[1]);
 	  
@@ -336,6 +337,7 @@ module processor(
 	  
 	  //choose first input to branch comparison for line 2
 	  // for now only the values from regfile - later add bypassing
+	  
 	  wire [31:0] branchA2, branchB2;
 	  assign branchA2 = dataA2;
 	  assign branchB2 = dataB2;
@@ -749,8 +751,8 @@ module processor(
 	  assign address_dmem_a = output_XM[11:0];
 	  assign address_dmem_b = output_XM[90:79];
 	  
-	  assign data_a = muxM1 ? data_writeReg_a : output_XM[31:0];
-	  assign data_b = muxM2 ? data_writeReg_b : output_XM[110:79]; 
+	  assign data_a = muxM ? data_writeReg_a : output_XM[31:0];
+	  assign data_b = muxM ? data_writeReg_b : output_XM[110:79]; 
 	  
 	  assign wren_b = output_XM[155];
 	  assign wren_a = output_XM[76];
@@ -800,13 +802,29 @@ module processor(
 	 // adding 2nd pipe bypassing 12/3
 	 
 	  wire [1:0] ALUin1A, ALUin1B, ALUin2A, ALUin2B;
-	  wire muxM1, muxM2;
+	  wire muxM1;
 	  
 	  //////// line 1 ////////////
-    bypassLogic bpl_1(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
- 	               output_XM[73:69], output_MW[73:69], rs, rd, ALUin1A, ALUin1B, muxM1, muxBranchA, muxBranchB, bexMux, jrMux);
+//    bypassLogic bpl_1(output_MW[74], output_XM[74], output_XM[76], output_MW[75], output_DX[36:32], output_DX[16:12],
+// 	               output_XM[73:69], output_MW[73:69], rs, rd, ALUin1A, ALUin1B, muxM, muxBranchA, muxBranchB, bexMux1, jrMux1);
     
 	 ///// line 2 ///////////
-	 bypassLogic bpl_2(output_MW[151], output_XM[153], output_XM[155], output_MW[152], output_DX[188:184], output_DX[168:164],
-	               output_XM[152:148], output_MW[150:146], rs2, rd2, ALUin2A, ALUin2B, muxM2, muxBranchA, muxBranchB, bexMux, jrMux);
+//	 bypassLogic bpl_2(output_MW[151], output_XM[153], output_XM[155], output_MW[152], output_DX[188:184], output_DX[168:164],
+//	               output_XM[152:148], output_MW[150:146], rs2, rd2, ALUin2A, ALUin2B, muxM, muxBranchA, muxBranchB, bexMux2, jrMux2);
+
+	bypassLogic2 BPL ( output_MW[74], output_MW[151],
+							output_XM[74], output_XM[153],
+							output_XM[76], output_XM[155],
+							output_MW[75], output_MW[152],
+							output_DX[36:32], output_DX[188:184],
+							output_DX[16:12], output_DX[168:164],
+							output_XM[73:69], output_XM[152:148],
+							output_MW[73:69], output_MW[150:146],
+							rs, rd,
+							ALUin1A, ALUin1B,
+							ALUin2A, ALUin2B,
+							muxM,
+							muxBranchA, muxBranchB,
+							bexMux, jrMUx );
+						
 endmodule
