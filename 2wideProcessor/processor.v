@@ -820,11 +820,11 @@ module processor(
 							output_DX[16:12], output_DX[168:164],
 							output_XM[73:69], output_XM[152:148],
 							output_MW[73:69], output_MW[150:146],
-							rs, rd,
+							rs, rd, rs2, rd2,
 							ALUin1A, ALUin1B,
 							ALUin2A, ALUin2B,
 							muxM,
-							muxBranchA, muxBranchB,
-							bexMux, jrMUx );
+							muxBranchA_1, muxBranchB_1, muxBranchA_2, muxBranchB_2,
+							bexMux1, bexMux2, jrMux1, jrMux2 );
 						
 endmodule
