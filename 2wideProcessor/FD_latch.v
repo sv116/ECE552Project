@@ -5,7 +5,7 @@ module FD_latch(clock,
  input clock, ctrl_writeEnable, ctrl_writeEnable2, ctrl_reset;		
  input [95:0] data_in;
  output [95:0] data_out;
- 
+ wire en = ctrl_writeEnable ? ctrl_writeEnable2 : 1'b0;
  genvar c;
  generate
  
@@ -19,7 +19,7 @@ module FD_latch(clock,
  generate
  
  for(k=66; k<=95; k=k+1) begin: loop2
- dffe_ref f(data_out[k], data_in[k], clock, ctrl_writeEnable2, ctrl_reset);
+ dffe_ref f(data_out[k], data_in[k], clock, en, ctrl_reset);
  end
  
  endgenerate

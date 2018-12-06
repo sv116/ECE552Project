@@ -20,17 +20,19 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_a, q_imem_a, q_imem_b,
-    address_imem_a, address_imem_b, ignore, rden_b, data_writeReg_b, ctrl_writeReg_b, ctrl_writeEnable_b,
+module skeleton(clock, reset, ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_a, q_imem_a, q_imem_b,
+    address_imem_a, address_imem_b, ignore, data_writeReg_b, ctrl_writeReg_b, ctrl_writeEnable_b,
 	 outputFD,
 	 dx1, dx2,
 	 xm1, xm2,
-	 mw1, mw2);
+	 mw1, mw2,
+	 ALUinA, ALUinB,ALUinA2, ALUinB2, branchA2, branchB2, branchA, branchB, branchTaken, bnetaken, blttaken, PCSrc1,NEXTPC, nextPC, nP, PCSrc, nextJumpPC, nextJumpPC2);
     input clock, reset;
 	 
-	 output ignore; 
-	 wire [31:0]  data_result, ALU_dataA, ALU_dataB, branchA, branchB;
+	 output ignore,branchTaken, bnetaken, blttaken;
+	 wire [31:0]  data_result, ALU_dataA, ALU_dataB;
 	 output [95:0] outputFD;
+	 output [31:0] NEXTPC = outputFD[63:32];
 	 wire [271:0] output_DX;
 	 wire [157:0] output_XM;
 	 wire [153:0] output_MW;
@@ -40,18 +42,18 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 	 output [78:0] xm2 = output_XM[157:79]; 
 	 output [76:0] mw1 = output_MW[76:0];
 	 output [76:0] mw2 = output_MW[153:77];
-	 wire ALUSrc,  branchTaken, lessThan1;
+	 wire ALUSrc, lessThan1;
     wire [4:0] ALUop;
 	 wire [1:0] muxBranchA, muxBranchB;
-	 
+	 output [1:0] PCSrc1, PCSrc;
     /** IMEM **/
    
     output [11:0] address_imem_a;
 	 output [11:0] address_imem_b;
-    output [31:0] q_imem_a;
+    output [31:0] q_imem_a, branchA2, branchB2,branchA, branchB,  nextPC, nP, nextJumpPC, nextJumpPC2;
 	 output [31:0] q_imem_b;
 	 wire	 rden_a;
-    output   rden_b;
+    wire   rden_b;
     imem2 my_imem(
         .address_a    (address_imem_a),	 // address of data a
 		  .address_b    (address_imem_b),
@@ -66,7 +68,7 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 	 
     wire [11:0] address_dmem_a;
 	 wire [11:0] address_dmem_b;
-    wire [31:0] data_a;
+    wire [31:0] data_a, NextPC;
 	 wire [31:0] data_b;
     wire wren_a;
 	 wire wren_b;
@@ -86,7 +88,7 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
     );
 
     /** REGFILE **/
-
+    output [2:0] ALUinA, ALUinB,ALUinA2, ALUinB2;
     output ctrl_writeEnable_a;
 	 output ctrl_writeEnable_b;
     output [4:0] ctrl_writeReg_a;
@@ -161,7 +163,9 @@ module skeleton(clock, reset,ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg_
 		 output_XM,
 		 output_MW,
 		 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,
-		 branchTaken, branchA, branchB,muxBranchA, muxBranchB, lessThan1, ignore
+		 branchTaken, branchA, branchB,muxBranchA, muxBranchB, lessThan1, ignore,
+		 ALUinA, ALUinB,ALUinA2, ALUinB2, branchA2, branchB2, bnetaken, blttaken, NextPC, PCSrc1, nextPC, nP, PCSrc,
+		 nextJumpPC, nextJumpPC2
     );
 
  

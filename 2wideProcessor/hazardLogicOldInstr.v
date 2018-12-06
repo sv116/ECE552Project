@@ -1,4 +1,4 @@
-module hazardLogic(JR, bex, DX_regWrite, DX_regWrite2, clock, reset, DX_MemRead, DX_MemRead2, DX_rs, DX_rs2, DX_rd, DX_rd2, FD_rt, FD_rs, FD_rd, XM_rd, XM_rd2, branch, 
+module hazardLogicOldInstr(JR, bex, DX_regWrite, DX_regWrite2, clock, reset, DX_MemRead, DX_MemRead2, DX_rs, DX_rs2, DX_rd, DX_rd2, FD_rt, FD_rs, FD_rd, XM_rd, XM_rd2, branch, 
                    xm_MemRead, xm_MemRead2, FDWrite, PCWrite, DXWrite, XMWrite, control, aluOp, dataReady);
 
 input DX_MemRead, DX_MemRead2, branch, xm_MemRead, xm_MemRead2, clock, reset, DX_regWrite, DX_regWrite2, bex, JR,dataReady ;
@@ -36,7 +36,7 @@ or or1(hazard1, compareRs, compareRt);
 and and1(s[0], DX_MemRead, rdNull, hazard1); //data hazard and a load so stall
 
 wire hazard12;
-or orP2(hazard12, compareRs2, compareRt2);
+or orP1(hazard12, compareRs2, compareRt2);
 and andP1(s1[0], DX_MemRead2, rdNull2, hazard12); //data hazard in pipe 2 with load in pipe 2 so stall
 
 
@@ -44,15 +44,15 @@ or or2(hazard2, compareRd, compareRs);
 and and2(s[1], branch, DX_regWrite, rdNull, hazard2); // data hazard and a branch
 
 wire hazard22;
-or orp2(hazard22, compareRd2, compareRs2);
-and andp2(s1[1], branch, DX_regWrite2, rdNull, hazard22); // data hazard with pipe2  and it is a branch so stall
+or orP2(hazard22, compareRd2, compareRs2);
+and andP2(s1[1], branch, DX_regWrite2, rdNull, hazard22); // data hazard with pipe2  and it is a branch so stall
 
 or or3(hazard3, xmRd, xmRs);
 and and3(s[2], xm_MemRead, branch, xmRdNull, hazard3); // data hazard with load in xm
 
 wire hazard32;
-or orpp3(hazard32, xmRd2, xmRs2);
-and andpp3(s1[2], xm_MemRead2, branch, xmRdNull2, hazard32); // data hazard with load in xm
+or orP3(hazard32, xmRd2, xmRs2);
+and andP3(s1[2], xm_MemRead2, branch, xmRdNull2, hazard32); // data hazard with load in xm
 
 //stall for bex?  //not using bex in our test benches so do not need this
 wire stallB1, stallBB, stallB;
