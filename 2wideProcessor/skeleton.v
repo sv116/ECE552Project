@@ -25,10 +25,10 @@ module skeleton(clock, reset, ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg
 	 outputFD,
 	 dx1, dx2,
 	 xm1, xm2,
-	 mw1, mw2,
+	 mw1, mw2, cycles,
 	 ALUinA, ALUinB,ALUinA2, ALUinB2, branchA2, branchB2, branchA, branchB, branchTaken, bnetaken, blttaken, PCSrc1,NEXTPC, nextPC, nP, PCSrc, nextJumpPC, nextJumpPC2);
     input clock, reset;
-	 
+	 output [31:0] cycles;
 	 output ignore,branchTaken, bnetaken, blttaken;
 	 wire [31:0]  data_result, ALU_dataA, ALU_dataB;
 	 output [95:0] outputFD;
@@ -165,7 +165,7 @@ module skeleton(clock, reset, ctrl_writeEnable_a, ctrl_writeReg_a, data_writeReg
 		 ALUSrc,  data_result, ALU_dataA, ALU_dataB, ALUop,
 		 branchTaken, branchA, branchB,muxBranchA, muxBranchB, lessThan1, ignore,
 		 ALUinA, ALUinB,ALUinA2, ALUinB2, branchA2, branchB2, bnetaken, blttaken, NextPC, PCSrc1, nextPC, nP, PCSrc,
-		 nextJumpPC, nextJumpPC2
+		 nextJumpPC, nextJumpPC2, cycles
     );
 
  

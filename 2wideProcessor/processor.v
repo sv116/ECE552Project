@@ -96,7 +96,7 @@ module processor(
 	 branchTaken, branchA, branchB,
 	 muxBranchA, muxBranchB, less, ignore, ALUinA, ALUinB,ALUinA2, ALUinB2, branchA2, branchB2, bnetaken, blttaken, NextPC,
 	 PCSrc1, nextPC, nP, PCSrc,
-    nextJumpPC, nextJumpPC2 
+    nextJumpPC, nextJumpPC2,cycles 
 );  
 	//Cycle and instruction counter logic -- needs to be updated for two wide
 	reg [31:0] cycl; 
@@ -105,7 +105,7 @@ module processor(
 	  begin
 			  cycle_count <= cycle_count+1;
 	  end
-	wire [31:0] cycles = cycle_count;
+	output [31:0] cycles = cycle_count;
 		
     // Control signals
     input clock, reset;
@@ -209,7 +209,7 @@ module processor(
 	
 	 wire [95:0] inputFD;// outputFD;
 	 assign inputFD[31:0] = FD_flush ? 32'd0 : q_imem_a;
-	 assign inputFD[63:32] =  NextPC; //PCWrite2 ? pcPlus1 
+	 assign inputFD[63:32] = FDWrite2 ? NextPC-1 : NextPC; //PCWrite2 ? pcPlus1 
 	 assign inputFD[95:64] = FD_FlushNewer ? 32'd0 : q_imem_b;
 	 
 	 FD_latch fd(clock, FDWrite, FDWrite2, reset, outputFD, inputFD);
@@ -514,7 +514,7 @@ module processor(
 	// if newer one is also zero then NextPC is chosen
 	 output [1:0] PCSrc1;
 	 assign PCSrc1 = pcSource4==2'b0 ? pcSource4In2 : pcSource4;
-	 wire [31:0] nextJump = pcSource4==2'b0 ? nextJumpPC2 : nextJumpPC;
+	 wire [31:0] nextJump = pcSource4==2'b0 ? nextJumpPC2-2 : nextJumpPC-3;
 	 wire [26:0] nextTarget = pcSource4==2'b0 ? target2: target;
 	 wire DXWrite2 =  pcSource4==2'b0;
 	 output ignore;
